@@ -1,0 +1,239 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Home Controller",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/config": {
+      "get": {
+        "summary": "Config",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "operationId": "Config"
+      }
+    },
+    "/api/status": {
+      "get": {
+        "summary": "Status",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "operationId": "Status"
+      }
+    },
+    "/api/save": {
+      "get": {
+        "summary": "Save",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "operationId": "Save",
+        "parameters": [
+          {
+            "name": "ssid",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": "Ibrodev"
+          },
+          {
+            "name": "pass",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": "Made4MeAlone"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {}
+          }
+        }
+      }
+    },
+    "/api/room": {
+      "get": {
+        "summary": "Room",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "operationId": "Room",
+        "requestBody": {
+          "content": {
+            "application/json": {}
+          }
+        }
+      }
+    },
+    "/api/ir/commands": {
+      "get": {
+        "summary": "Get Commands",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "operationId": "Get_Commands",
+        "requestBody": {
+          "content": {
+            "application/json": {}
+          }
+        }
+      }
+    },
+    "/api/switch/state": {
+      "post": {
+        "summary": "Switch State",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "operationId": "Switch_State",
+        "parameters": [
+          {
+            "name": "pin",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": "12"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "pin": 2,
+                "state": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/switch/relay": {
+      "post": {
+        "summary": "Attach relay",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "operationId": "Attach_relay",
+        "parameters": [
+          {
+            "name": "pin",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": "4"
+          },
+          {
+            "name": "relayPin",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": "7"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {}
+          }
+        }
+      }
+    },
+    "/api/ir/record": {
+      "post": {
+        "summary": "Record Command",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "operationId": "Record_Command",
+        "parameters": [
+          {
+            "name": "slot",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": "1"
+          },
+          {
+            "name": "deviceId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": "<<$guid>>"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": "Infinix TV"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {}
+          }
+        }
+      }
+    },
+    "/api/ir/emit": {
+      "post": {
+        "summary": "Emit Command",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "operationId": "Emit_Command",
+        "parameters": [
+          {
+            "name": "slot",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": "1"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {}
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://192.168.1.150"
+    },
+    {
+      "url": "http://192.168.4.1"
+    }
+  ]
+}
