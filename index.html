@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AURA - Home Controller</title>
-  <meta name="description" content="Hardware Dashboard for Task-Driven Home Node">
+  <title>Model Softplus Limited | The Future of Smart Living</title>
+  <meta name="description" content="Premium smart home controllers and embedded hardware solutions by Model Softplus Limited.">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,131 +13,145 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app-background-glow"></div>
+  <!-- Ambient background glow -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
   
-  <!-- Loading Overlay -->
-  <div id="loading-overlay" class="loading-overlay">
-    <div class="spinner"></div>
-    <p>Connecting to Home Node...</p>
-  </div>
-  
-  <div class="dashboard-container" style="display: none;" id="main-dashboard">
-    <!-- Header -->
-    <header class="app-header">
-      <div class="logo-area">
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-content">
+      <div class="logo">
         <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20Z" fill="url(#logoGrad)"/>
           <path d="M12 6C8.69 6 6 8.69 6 12C6 15.31 8.69 18 12 18C15.31 18 18 15.31 18 12C18 8.69 15.31 6 12 6Z" fill="url(#logoGrad)"/>
           <defs>
             <linearGradient id="logoGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#38EF7D"/>
-              <stop offset="1" stop-color="#11998E"/>
+              <stop stop-color="#4facfe"/>
+              <stop offset="1" stop-color="#00f2fe"/>
             </linearGradient>
           </defs>
         </svg>
-        <div class="logo-text">
-          <h1>AURA <span class="badge" id="wifi-badge">Node Online</span></h1>
-          <span class="sub-logo" id="device-ip">192.168.1.150</span>
+        <span class="logo-text">Model Softplus</span>
+      </div>
+      <div class="nav-links">
+        <a href="#products">Hardware</a>
+        <a href="#features">Ecosystem</a>
+        <a href="#about">About</a>
+        <a href="#contact" class="btn btn-primary">Contact Sales</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="hero-content">
+      <div class="hero-text fade-up">
+        <div class="badge">Next Generation Smart Home</div>
+        <h1 class="hero-title">Control your world with <span class="gradient-text">absolute precision.</span></h1>
+        <p class="hero-subtitle">Model Softplus Limited delivers military-grade smart home controllers and embedded hardware solutions designed for the modern lifestyle.</p>
+        <div class="hero-actions">
+          <a href="#products" class="btn btn-primary btn-lg">Explore Hardware</a>
+          <a href="#features" class="btn btn-secondary btn-lg">Discover the Ecosystem</a>
         </div>
       </div>
-      
-      <div class="header-right">
-        <button id="btn-config" class="icon-btn" title="WiFi Config">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
-          </svg>
-        </button>
+      <div class="hero-image fade-up delay-1">
+        <div class="image-glass-container">
+          <img src="assets/hero.png" alt="Model Softplus Smart Controller" class="floating-device">
+        </div>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <!-- Main Content Area -->
-    <main class="dashboard-main">
-      
-      <!-- Sensor Metrics -->
-      <section class="sensors-panel" id="sensors-container">
-        <!-- Injected via JS -->
-      </section>
+  <!-- Features Section -->
+  <section id="features" class="features-section">
+    <div class="section-header fade-up">
+      <h2>Architected for Performance</h2>
+      <p>Our devices bypass the cloud, running highly optimized, fully embedded software directly on the node.</p>
+    </div>
+    
+    <div class="features-grid">
+      <div class="feature-card glass-card fade-up">
+        <div class="feature-icon">⚡</div>
+        <h3>Zero Latency</h3>
+        <p>With an asynchronous localized server running inside the controller, hardware responses are instantaneous.</p>
+      </div>
+      <div class="feature-card glass-card fade-up delay-1">
+        <div class="feature-icon">🔒</div>
+        <h3>Air-Gapped Security</h3>
+        <p>Your data never leaves your home. Fully encrypted HTTP Basic Authentication comes standard on all units.</p>
+      </div>
+      <div class="feature-card glass-card fade-up delay-2">
+        <div class="feature-icon">🔌</div>
+        <h3>Limitless Expansion</h3>
+        <p>Built-in I2C expanders and solid-state relays allow you to attach dozens of high-voltage appliances effortlessly.</p>
+      </div>
+    </div>
+  </section>
 
-      <!-- Main Layout: Switches on left, IR Remote on right -->
-      <div class="hardware-grid-layout">
-        
-        <!-- Hardware Switches Grid -->
-        <section class="switches-section">
-          <div class="section-title-bar">
-            <h2>Hardware Switches</h2>
-            <span class="section-badge" id="switch-count-badge">0 Configured</span>
+  <!-- Product Showcase -->
+  <section id="products" class="product-showcase">
+    <div class="showcase-content">
+      <div class="showcase-text fade-up">
+        <h2>The Core Node</h2>
+        <p class="product-description">Our flagship controller is a masterpiece of embedded engineering. It seamlessly bridges the gap between massive electrical loads and sophisticated digital logic.</p>
+        <ul class="product-specs">
+          <li><strong>Processor:</strong> Dual-Core 240MHz XTensa</li>
+          <li><strong>Storage:</strong> LittleFS High-Speed Flash</li>
+          <li><strong>Connectivity:</strong> Wi-Fi b/g/n & Infrared Transceiver</li>
+          <li><strong>I/O:</strong> 16-Channel MCP23017 Expander Integration</li>
+        </ul>
+        <a href="#contact" class="btn btn-primary">Request Specification Sheet</a>
+      </div>
+      <div class="showcase-visual fade-up delay-1">
+        <div class="ui-mockup glass-card">
+          <div class="ui-header">
+            <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+            <div class="ui-title">Model Softplus Dashboard</div>
           </div>
-          <div class="switches-grid" id="switches-container">
-            <!-- Injected via JS -->
-          </div>
-        </section>
-
-        <!-- IR Remote Controller -->
-        <section class="remote-section">
-          <div class="section-title-bar">
-            <h2>IR Commands</h2>
-            <button id="btn-add-ir" class="btn btn-secondary" style="margin-left:auto; font-size:11px; padding:4px 8px;">+ Add Command</button>
-          </div>
-          <div class="remote-card">
-            <div class="remote-list" id="ir-container">
-              <!-- Injected via JS -->
+          <div class="ui-body">
+            <div class="mock-sensor-grid">
+              <div class="mock-sensor"><span>24.5°C</span></div>
+              <div class="mock-sensor"><span>45% Hum</span></div>
+              <div class="mock-sensor"><span>Clear</span></div>
+            </div>
+            <div class="mock-load-list">
+              <div class="mock-load active">Load 1 <span>ON</span></div>
+              <div class="mock-load">Load 2 <span>OFF</span></div>
+              <div class="mock-load">Load 3 <span>OFF</span></div>
             </div>
           </div>
-        </section>
-
+        </div>
       </div>
-    </main>
-  </div>
-
-  <!-- Config Modal -->
-  <div id="config-modal" class="modal-overlay">
-    <div class="modal-content">
-      <h2>WiFi Configuration</h2>
-      <p>Save new network credentials to the device.</p>
-      <form id="config-form">
-        <div class="form-group">
-          <label>SSID (Network Name)</label>
-          <input type="text" id="input-ssid" placeholder="MyWiFi" required>
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="input-pass" placeholder="••••••••" required>
-        </div>
-        <div class="form-actions">
-          <button type="button" class="btn btn-secondary" id="btn-close-modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save to Node</button>
-        </div>
-      </form>
     </div>
-  </div>
+  </section>
 
-  <!-- IR Record Modal -->
-  <div id="ir-modal" class="modal-overlay">
-    <div class="modal-content">
-      <h2 id="ir-modal-title">Record IR Command</h2>
-      <p>Save details and point your remote at the device.</p>
-      <form id="ir-form">
-        <div class="form-group">
-          <label>Slot ID</label>
-          <input type="number" id="input-ir-slot" required>
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <h3>Model Softplus Limited</h3>
+        <p>Innovating the embedded systems of tomorrow.</p>
+      </div>
+      <div class="footer-links">
+        <div class="link-col">
+          <h4>Company</h4>
+          <a href="#">About Us</a>
+          <a href="#">Careers</a>
+          <a href="#">Contact</a>
         </div>
-        <div class="form-group">
-          <label>Device ID (e.g. infinix-tv)</label>
-          <input type="text" id="input-ir-device" required>
+        <div class="link-col">
+          <h4>Legal</h4>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Compliance</a>
         </div>
-        <div class="form-group">
-          <label>Command Name (e.g. power)</label>
-          <input type="text" id="input-ir-name" required>
-        </div>
-        <div class="form-actions">
-          <button type="button" class="btn btn-secondary" id="btn-close-ir-modal">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="btn-submit-ir">Start Recording</button>
-        </div>
-      </form>
+      </div>
     </div>
-  </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Model Softplus Limited. All rights reserved.</p>
+    </div>
+  </footer>
 
-  <!-- Main Application Script -->
   <script src="app.js"></script>
 </body>
 </html>
