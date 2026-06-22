@@ -67,20 +67,53 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputSceneName = document.getElementById('input-scene-name');
   const sceneLoadsContainer = document.getElementById('scene-loads-container');
 
-  const irDeviceDropdown = document.getElementById('ir-device-dropdown');
-  const irDeviceSelected = document.getElementById('ir-device-selected');
-  const irDeviceOptions = document.getElementById('ir-device-options');
-  let currentSelectedDevice = 'all';
+  const btnOpenRemote = document.getElementById('btn-open-remote');
+  const vrModal = document.getElementById('virtual-remote-modal');
+  const closeVrModalBtn = document.getElementById('btn-close-virtual-remote');
+  const vrDeviceSelect = document.getElementById('virtual-remote-device-select');
+  const btnAddVrDevice = document.getElementById('btn-add-virtual-device');
+  const vrGrid = document.getElementById('virtual-remote-grid');
+  let currentSelectedVrDevice = '';
+  let globalIrCommands = [];
 
-  if (irDeviceSelected) {
-    irDeviceSelected.addEventListener('click', (e) => {
-      e.stopPropagation();
-      irDeviceOptions.classList.toggle('open');
+  if (btnOpenRemote) {
+    btnOpenRemote.addEventListener('click', () => {
+      vrModal.classList.add('active');
+      renderVirtualRemote();
     });
-    
-    document.addEventListener('click', () => {
-      if (irDeviceOptions && irDeviceOptions.classList.contains('open')) {
-        irDeviceOptions.classList.remove('open');
+  }
+
+  if (closeVrModalBtn) {
+    closeVrModalBtn.addEventListener('click', () => {
+      vrModal.classList.remove('active');
+    });
+  }
+
+  if (vrDeviceSelect) {
+    vrDeviceSelect.addEventListener('change', (e) => {
+      currentSelectedVrDevice = e.target.value;
+      renderVirtualRemote();
+    });
+  }
+
+    if (btnAddVrDevice) {
+    btnAddVrDevice.addEventListener('click', async () => {
+      const newName = prompt('Enter a name for the new Device (e.g., AC, TV):');
+      if (!newName || newName.trim() === '') return;
+      
+      try {
+        const res = await fetch(getApiUrl(`/api/ir/devices?name=${encodeURIComponent(newName.trim())}`), { method: 'POST' });
+        const data = await res.json();
+        
+        if (res.ok) {
+           showToast('success', 'Device Created', 'Device added successfully.');
+           currentSelectedVrDevice = String(data.deviceId);
+           pollDeviceData(); // Will trigger re-render
+        } else {
+           showToast('error', 'Limit Reached', data.error || 'Cannot create device.');
+        }
+      } catch(err) {
+         showToast('error', 'Network Error', 'Could not reach the device.');
       }
     });
   }
@@ -170,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSwitches(data.switches);
     renderLoads(data.loads);
     if (data.controllers && data.controllers.ir) {
-      renderIRCommands(data.controllers.ir.commands);
+      renderIRCommands(data.controllers.ir);
     }
     
     // Scenes
@@ -513,9 +546,13 @@ document.addEventListener('DOMContentLoaded', () => {
           ? `<span class="load-badge">⚡ ${loadName}</span>`
           : `<span class="load-badge" style="opacity:0.4">No Load</span>`;
 
+        const displayName = sw.name || `Switch ${index + 1}`;
         div.innerHTML = `
           <div class="switch-header">
-            <h3>Switch ${index + 1}</h3>
+            <h3 style="display: flex; align-items: center; gap: 8px;">
+              ${displayName}
+              <button class="icon-btn edit-name-btn" data-type="switch" data-pin="${sw.pin}" data-name="${sw.name || ''}" title="Rename switch" style="padding: 2px;">✎</button>
+            </h3>
             ${loadBadge}
           </div>
           <div class="switch-actions">
@@ -524,6 +561,38 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         `;
         switchesContainer.appendChild(div);
+      });
+
+      // Bind rename events
+      document.querySelectorAll('.edit-name-btn').forEach(el => {
+        el.addEventListener('click', async (e) => {
+          const type = e.currentTarget.dataset.type;
+          const pin = e.currentTarget.dataset.pin;
+          const currentName = e.currentTarget.dataset.name;
+          const newName = prompt(`Enter a new name for this ${type}:`, currentName);
+          if (newName !== null && newName.trim() !== '') {
+            try {
+              const formData = new URLSearchParams();
+              formData.append('type', type);
+              formData.append('pin', pin);
+              formData.append('name', newName.trim());
+              const res = await fetch(getApiUrl('/api/hardware/rename'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString()
+              });
+              if (res.ok) {
+                showToast('success', 'Renamed successfully', `${type} renamed to ${newName.trim()}`);
+                switchesContainer.innerHTML = ''; // force rebuild
+                pollDeviceData();
+              } else {
+                showToast('error', 'Rename Failed', 'Device error.');
+              }
+            } catch (err) {
+              showToast('error', 'Network Error', 'Could not reach device.');
+            }
+          }
+        });
       });
 
       // Bind toggle events
@@ -560,12 +629,18 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     } else {
       // Just update states smoothly without rebuilding DOM
-      switches.forEach(sw => {
+      switches.forEach((sw, index) => {
         const card = document.getElementById(`card-switch-${sw.pin}`);
         if (card) {
           const loadState = sw.hasLoad && sw.load ? sw.load.state : (sw.state === 1);
           if (loadState) card.classList.add('active');
           else card.classList.remove('active');
+
+          const h3 = card.querySelector('h3');
+          if (h3) {
+             const displayName = sw.name || `Switch ${index + 1}`;
+             h3.childNodes[0].textContent = displayName + " ";
+          }
 
           const btn = card.querySelector('.trigger-btn');
           if (btn) {
@@ -620,9 +695,13 @@ document.addEventListener('DOMContentLoaded', () => {
       div.className = `load-card ${isOn ? 'active' : ''}`;
       div.id = `card-load-${load.pin}`;
 
+      const displayName = load.name || `Load ${index + 1}`;
       div.innerHTML = `
         <div class="load-header">
-          <h3>Load ${index + 1}</h3>
+          <h3 style="display: flex; align-items: center; gap: 8px;">
+             ${displayName}
+             <button class="icon-btn edit-name-btn" data-type="load" data-pin="${load.pin}" data-name="${load.name || ''}" title="Rename load" style="padding: 2px;">✎</button>
+          </h3>
           <div style="display:flex; gap:10px; align-items:center;">
             <div class="load-state-dot ${isOn ? 'on' : 'off'}"></div>
             <button class="action-btn load-trigger-btn" data-pin="${load.pin}">Toggle</button>
@@ -639,6 +718,38 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
       loadsContainer.appendChild(div);
+    });
+
+    // Bind rename events
+    document.querySelectorAll('#loads-container .edit-name-btn').forEach(el => {
+      el.addEventListener('click', async (e) => {
+        const type = e.currentTarget.dataset.type;
+        const pin = e.currentTarget.dataset.pin;
+        const currentName = e.currentTarget.dataset.name;
+        const newName = prompt(`Enter a new name for this ${type}:`, currentName);
+        if (newName !== null && newName.trim() !== '') {
+          try {
+            const formData = new URLSearchParams();
+            formData.append('type', type);
+            formData.append('pin', pin);
+            formData.append('name', newName.trim());
+            const res = await fetch(getApiUrl('/api/hardware/rename'), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: formData.toString()
+            });
+            if (res.ok) {
+              showToast('success', 'Renamed successfully', `${type} renamed to ${newName.trim()}`);
+              loadsContainer.dataset.lastJson = ''; // force rebuild
+              pollDeviceData();
+            } else {
+              showToast('error', 'Rename Failed', 'Device error.');
+            }
+          } catch (err) {
+            showToast('error', 'Network Error', 'Could not reach device.');
+          }
+        }
+      });
     });
 
     document.querySelectorAll('.load-trigger-btn').forEach(el => {
@@ -753,167 +864,136 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function renderIRCommands(commands) {
-    if (!commands || commands.length === 0) {
-      irContainer.innerHTML = '<div class="ir-empty-state">No IR commands recorded yet.</div>';
-      irContainer.dataset.lastJson = '[]';
+  function renderVirtualRemote() {
+    if (!currentSelectedVrDevice || currentSelectedVrDevice === '-1') {
+      vrGrid.innerHTML = '<div style="grid-column: span 3; text-align:center; color:var(--text-muted); padding: 20px;">Please select or add a device</div>';
+      return;
+    }
 
-      // Update Add button for first command
-      btnAddIr.onclick = () => {
-        irModalTitle.textContent = 'Record New Command';
-        inputIrSlot.value = 0;
-        inputIrDevice.value = '';
-        inputIrName.value = '';
+
+
+    const deviceIdInt = parseInt(currentSelectedVrDevice);
+    const device = globalIrDevices.find(d => d.id === deviceIdInt);
+    
+    if (!device) {
+       vrGrid.innerHTML = '<div style="grid-column: span 3; text-align:center; color:var(--text-muted); padding: 20px;">Device not found</div>';
+       return;
+    }
+
+    vrGrid.innerHTML = '';
+
+    const startSlot = deviceIdInt * 15;
+
+    // Render exactly 15 buttons per device
+    for (let i = 0; i < 15; i++) {
+      const btn = document.createElement('div');
+      const slotIndex = startSlot + i;
+      const cmd = globalIrCommands.find(c => parseInt(c.slot) === slotIndex);
+      
+      if (cmd && cmd.name) {
+        btn.className = 'vr-btn';
+        btn.innerHTML = `
+          <span>${cmd.name}</span>
+          <div class="vr-edit-icon" data-slot="${slotIndex}" data-device="${device.name}" data-name="${cmd.name}" title="Edit/Re-record">✎</div>
+        `;
+        
+        btn.addEventListener('click', async (e) => {
+          if (e.target.classList.contains('vr-edit-icon')) return; 
+          
+          btn.style.opacity = '0.5';
+          try {
+            const res = await fetch(getApiUrl(`/api/ir/emit?slot=${slotIndex}`), { method: 'POST' });
+            if (res.ok) showToast('success', 'IR Emitted', `Sent ${cmd.name}`);
+            else showToast('error', 'Emit Failed', 'Device error');
+          } catch (err) {
+            showToast('error', 'Network Error', 'Could not reach device');
+          }
+          setTimeout(() => btn.style.opacity = '1', 200);
+        });
+
+      } else {
+        btn.className = 'vr-btn vr-empty';
+        btn.innerHTML = 'Empty';
+        btn.addEventListener('click', () => {
+          irModalTitle.textContent = 'Record Command';
+          inputIrSlot.value = slotIndex;
+          inputIrDevice.value = device.name;
+          inputIrName.value = '';
+          irModal.classList.add('active');
+        });
+      }
+      
+      vrGrid.appendChild(btn);
+    }
+
+    // Add a delete button for the device
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn btn-danger';
+    delBtn.style.gridColumn = 'span 3';
+    delBtn.style.marginTop = '16px';
+    delBtn.textContent = 'Delete Device';
+    delBtn.addEventListener('click', async () => {
+       if(!confirm(`Delete device ${device.name} and all its commands?`)) return;
+       try {
+           const res = await fetch(getApiUrl(`/api/ir/devices?id=${deviceIdInt}`), { method: 'DELETE' });
+           if (res.ok) {
+              showToast('success', 'Device Deleted', 'Device removed.');
+              currentSelectedVrDevice = '-1';
+              pollDeviceData();
+           }
+       } catch(err) {
+           showToast('error', 'Network Error', 'Could not delete device.');
+       }
+    });
+    vrGrid.appendChild(delBtn);
+
+    vrGrid.querySelectorAll('.vr-edit-icon').forEach(icon => {
+      icon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        irModalTitle.textContent = 'Edit Command';
+        inputIrSlot.value = icon.dataset.slot;
+        inputIrDevice.value = icon.dataset.device;
+        inputIrName.value = icon.dataset.name;
         irModal.classList.add('active');
-      };
-      return;
+      });
+    });
+  }
+
+  function renderIRCommands(irData) {
+    globalIrCommands = irData.commands || [];
+    globalIrDevices = irData.devices || [];
+
+    if (vrDeviceSelect) {
+      const oldVal = vrDeviceSelect.value;
+      let optionsHtml = '<option value="-1">-- Select Device --</option>';
+      globalIrDevices.forEach(dev => {
+        optionsHtml += `<option value="${dev.id}">${dev.name}</option>`;
+      });
+      vrDeviceSelect.innerHTML = optionsHtml;
+      
+      if (globalIrDevices.find(d => String(d.id) === oldVal)) {
+        vrDeviceSelect.value = oldVal;
+        currentSelectedVrDevice = oldVal;
+      } else if (globalIrDevices.length > 0 && (!currentSelectedVrDevice || currentSelectedVrDevice === '-1')) {
+        const first = String(globalIrDevices[0].id);
+        vrDeviceSelect.value = first;
+        currentSelectedVrDevice = first;
+      } else {
+        currentSelectedVrDevice = vrDeviceSelect.value;
+      }
     }
 
-    // Sort commands by slot to keep predictable ordering
-    commands.sort((a, b) => parseInt(a.slot) - parseInt(b.slot));
-
-    // Check if the data has actually changed to prevent UI flickering on polling
-    const commandsJson = JSON.stringify(commands);
-    if (irContainer.dataset.lastJson === commandsJson) {
-      return;
-    }
-    irContainer.dataset.lastJson = commandsJson;
-
-    let maxSlot = 0;
-    if (commands.length > 0) {
-      maxSlot = Math.max(...commands.map(c => parseInt(c.slot)));
+    if (vrModal && vrModal.classList.contains('active')) {
+      renderVirtualRemote();
     }
 
-    // Update Add button logic to auto-increment slot
-    btnAddIr.onclick = () => {
-      irModalTitle.textContent = 'Record New Command';
-      inputIrSlot.value = maxSlot + 1;
-      inputIrDevice.value = commands.length > 0 ? commands[0].deviceId : '';
-      inputIrName.value = '';
-      irModal.classList.add('active');
-    };
-
-    // Group commands by deviceId
-    const grouped = commands.reduce((acc, cmd) => {
-      if (!acc[cmd.deviceId]) acc[cmd.deviceId] = [];
-      acc[cmd.deviceId].push(cmd);
-      return acc;
-    }, {});
-
-    // Populate datalist for Device IDs
     const datalist = document.getElementById('ir-device-list');
     if (datalist) {
-      datalist.innerHTML = Object.keys(grouped)
-        .map(deviceId => `<option value="${deviceId}"></option>`)
+      datalist.innerHTML = globalIrDevices
+        .map(dev => `<option value="${dev.id}">${dev.name}</option>`)
         .join('');
     }
 
-    // Populate dropdown selector
-    if (irDeviceDropdown) {
-      const devices = ['all', ...Object.keys(grouped)];
-      
-      let html = '';
-      devices.forEach(d => {
-        const label = d === 'all' ? 'All Devices' : d;
-        html += `<div class="dropdown-option" data-value="${d}">${label}</div>`;
-      });
-      irDeviceOptions.innerHTML = html;
-      
-      if (!devices.includes(currentSelectedDevice)) {
-         currentSelectedDevice = 'all';
-      }
-      
-      irDeviceSelected.innerHTML = `${currentSelectedDevice === 'all' ? 'All Devices' : currentSelectedDevice} <span>▼</span>`;
-      document.getElementById('ir-device-dropdown').style.display = Object.keys(grouped).length > 0 ? 'block' : 'none';
-
-      // Re-bind clicks on new options
-      irDeviceOptions.querySelectorAll('.dropdown-option').forEach(opt => {
-        opt.addEventListener('click', (e) => {
-          e.stopPropagation();
-          currentSelectedDevice = opt.dataset.value;
-          irDeviceSelected.innerHTML = `${currentSelectedDevice === 'all' ? 'All Devices' : currentSelectedDevice} <span>▼</span>`;
-          irDeviceOptions.classList.remove('open');
-          
-          // trigger filter
-          const groups = document.querySelectorAll('.ir-device-group');
-          groups.forEach(g => {
-            if (currentSelectedDevice === 'all' || g.dataset.deviceId === currentSelectedDevice) {
-              g.style.display = 'block';
-            } else {
-              g.style.display = 'none';
-            }
-          });
-        });
-      });
-    }
-
-    irContainer.innerHTML = '';
-
-    Object.keys(grouped).forEach(deviceId => {
-      const groupDiv = document.createElement('div');
-      groupDiv.className = 'ir-device-group';
-      groupDiv.dataset.deviceId = deviceId;
-      if (currentSelectedDevice !== 'all' && currentSelectedDevice !== deviceId) {
-        groupDiv.style.display = 'none';
-      }
-
-      const title = document.createElement('h3');
-      title.className = 'ir-device-title';
-      title.textContent = deviceId;
-      groupDiv.appendChild(title);
-
-      const listDiv = document.createElement('div');
-      listDiv.className = 'remote-list';
-
-      grouped[deviceId].forEach(cmd => {
-        const div = document.createElement('div');
-        div.className = 'ir-item';
-        div.innerHTML = `
-          <div class="ir-info">
-            <strong>${cmd.name}</strong>
-            <span>Slot ${cmd.slot} · ${cmd.protocol !== undefined ? 'Protocol ' + cmd.protocol : ''}</span>
-          </div>
-          <div class="ir-actions">
-            <button class="ir-btn-emit" data-slot="${cmd.slot}">Emit</button>
-            <button class="ir-btn-edit" data-slot="${cmd.slot}" title="Edit/Re-record">✎</button>
-          </div>
-        `;
-
-        // Bind Emit
-        div.querySelector('.ir-btn-emit').addEventListener('click', async (e) => {
-          const btn = e.currentTarget;
-          btn.textContent = '...';
-          try {
-            const res = await fetch(getApiUrl(`/api/ir/emit?slot=${cmd.slot}`), { method: 'POST' });
-            if (res.ok) {
-              showToast('success', 'IR Emitted', `Sent "${cmd.name}" from slot ${cmd.slot}.`);
-            } else {
-              showToast('error', 'Emit Failed', 'Device returned an error.');
-            }
-          } catch (err) {
-            console.error('IR emit failed', err);
-            showToast('error', 'Network Error', 'Could not reach the device.');
-          }
-          setTimeout(() => btn.textContent = 'Emit', 500);
-        });
-
-        // Bind Edit
-        div.querySelector('.ir-btn-edit').addEventListener('click', () => {
-          irModalTitle.textContent = 'Edit/Re-record Command';
-          inputIrSlot.value = cmd.slot;
-          inputIrDevice.value = cmd.deviceId;
-          inputIrName.value = cmd.name;
-          irModal.classList.add('active');
-        });
-
-        listDiv.appendChild(div);
-      });
-
-      groupDiv.appendChild(listDiv);
-      irContainer.appendChild(groupDiv);
-    });
-
-    // Populate climate automation dropdowns
     const onSelect = document.getElementById('auto-climate-on-slot');
     const offSelect = document.getElementById('auto-climate-off-slot');
     
@@ -922,7 +1002,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const offVal = offSelect.value;
       
       const optionsHtml = '<option value="-1">-- None --</option>' + 
-        commands.map(cmd => `<option value="${cmd.slot}">${cmd.deviceId} - ${cmd.name} (Slot ${cmd.slot})</option>`).join('');
+        globalIrCommands.map(cmd => `<option value="${cmd.slot}">${cmd.deviceId} - ${cmd.name} (Slot ${cmd.slot})</option>`).join('');
       
       onSelect.innerHTML = optionsHtml;
       offSelect.innerHTML = optionsHtml;
@@ -930,8 +1010,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (Array.from(onSelect.options).some(o => o.value == onVal)) onSelect.value = onVal;
       if (Array.from(offSelect.options).some(o => o.value == offVal)) offSelect.value = offVal;
       
-      // Since dropdowns are now populated, we can fetch the climate settings properly
-      fetchClimateAutomation();
+      if (!onSelect.dataset.fetched) {
+         onSelect.dataset.fetched = "true";
+         fetchClimateAutomation();
+      }
     }
   }
 
@@ -1048,7 +1130,7 @@ document.addEventListener('DOMContentLoaded', () => {
     submitBtn.disabled = true;
 
     try {
-      const res = await fetch(getApiUrl(`/api/ir/record?slot=${slot}&deviceId=${encodeURIComponent(deviceId)}&name=${encodeURIComponent(name)}`), { method: 'POST' });
+      const res = await fetch(getApiUrl(`/api/ir/record?slot=${slot}&name=${encodeURIComponent(name)}`), { method: 'POST' });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
         showToast('success', 'IR Recorded', data.message || `Command "${name}" saved to slot ${slot}.`);
@@ -1194,10 +1276,8 @@ document.addEventListener('DOMContentLoaded', () => {
     submitBtn.disabled = true;
 
     try {
-      const res = await fetch(getApiUrl('/api/scenes'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `name=${encodeURIComponent(name)}&actions=${encodeURIComponent(actionsStr)}`
+      const res = await fetch(getApiUrl(`/api/scenes?name=${encodeURIComponent(name)}&actions=${encodeURIComponent(actionsStr)}`), {
+        method: 'POST'
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {

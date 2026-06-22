@@ -371,3 +371,11 @@ flex-direction:column;gap:12px;align-items:flex-start;}
 .device-status-bar{
 flex-direction:column;gap:8px;}
 }
+
+.virtual-remote-grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;margin-top:16px;}
+.vr-btn{background:var(--bg-color);border:1px solid var(--panel-border);color:var(--text-primary);border-radius:var(--radius-sm);height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;cursor:pointer;position:relative;transition:all var(--transition-fast);}
+.vr-btn:hover:not(.vr-empty){border-color:var(--accent-primary);box-shadow:0 0 10px var(--active-glow);}
+.vr-btn:active:not(.vr-empty){transform:scale(0.95);}
+.vr-empty{border-style:dashed;color:var(--text-muted);opacity:0.6;}
+.vr-edit-icon{position:absolute;top:4px;right:4px;font-size:10px;color:var(--text-muted);cursor:pointer;background:rgba(255,255,255,0.1);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast);}
+.vr-edit-icon:hover{background:var(--accent-primary);color:#000;}
